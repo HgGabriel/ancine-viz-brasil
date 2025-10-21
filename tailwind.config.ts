@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -39,6 +42,10 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        blue: {
+          DEFAULT: "hsl(var(--blue))",
+          foreground: "hsl(var(--blue-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -57,6 +64,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        "gradient-brazil": "var(--gradient-brazil)",
+        "gradient-subtle": "var(--gradient-subtle)",
+      },
+      boxShadow: {
+        "brazil": "var(--shadow-brazil)",
       },
       borderRadius: {
         lg: "var(--radius)",
