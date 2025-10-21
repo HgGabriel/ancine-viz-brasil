@@ -69,6 +69,8 @@ const Index = () => {
           <DistribuidorasChart />
         </div>
 
+
+
         {/* Footer */}
         <div className="mt-12 text-center text-sm text-muted-foreground">
           <p>
