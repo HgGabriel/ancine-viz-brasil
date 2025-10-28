@@ -23,4 +23,21 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: mode === 'development',
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@radix-ui/react-tabs', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          charts: ['recharts'],
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 }));
