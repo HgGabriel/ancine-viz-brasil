@@ -17,6 +17,12 @@ export default {
         sans: ["Inter", "sans-serif"],
       },
       colors: {
+        // Brazilian theme colors
+        brasil: {
+          green: "#009c3b",
+          blue: "#002776", 
+          yellow: "#ffdf00",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
