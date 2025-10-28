@@ -1,38 +1,44 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { MainLayout } from "./components/layout/MainLayout";
+import { useDashboardBackgroundRefetch } from "./hooks/useBackgroundRefetch";
+import Overview from "./pages/Overview";
+import Market from "./pages/Market";
+import NationalProduction from "./pages/NationalProduction";
+import Distribution from "./pages/Distribution";
+import Exhibition from "./pages/Exhibition";
+import ForeignProduction from "./pages/ForeignProduction";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const AppContent = () => {
+  // Enable background refetching for critical dashboard data
+  useDashboardBackgroundRefetch();
+
+  return (
+    <MainLayout>
+      <Routes>
+        <Route path="/" element={<Overview />} />
+        <Route path="/mercado" element={<Market />} />
+        <Route path="/producao-nacional" element={<NationalProduction />} />
+        <Route path="/distribuicao" element={<Distribution />} />
+        <Route path="/exibicao" element={<Exhibition />} />
+        <Route path="/producao-estrangeira" element={<ForeignProduction />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </MainLayout>
+  );
+};
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-    <ReactQueryDevtools initialIsOpen={false} />
-  </QueryClientProvider>
+  <TooltipProvider>
+    <Toaster />
+    <Sonner />
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  </TooltipProvider>
 );
 
 export default App;
