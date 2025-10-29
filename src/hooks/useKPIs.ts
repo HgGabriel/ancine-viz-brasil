@@ -7,7 +7,8 @@ export const useMarketShareKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "market-share"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.MARKET_SHARE);
+      const response = await apiClient.get(API_ENDPOINTS.MARKET_SHARE);
+      const data = Array.isArray(response) ? response : [];
       
       // Processar dados para KPIs
       const brasileiro = data.find((item: any) => item.tipo_filme === "Brasileiro");
@@ -38,7 +39,8 @@ export const useDistribuidorasRankingKPIs = (limit = 10) => {
   return useQuery({
     queryKey: ["kpis", "distribuidoras-ranking", limit],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.RANKING_DISTRIBUIDORAS, { limit });
+      const response = await apiClient.get(API_ENDPOINTS.RANKING_DISTRIBUIDORAS, { limit });
+      const data = Array.isArray(response) ? response : [];
       
       // Processar ranking de distribuidoras
       const distribuidorasMap = new Map();
@@ -80,7 +82,8 @@ export const useSalasPorUFKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "salas-por-uf"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.SALAS_POR_UF);
+      const response = await apiClient.get(API_ENDPOINTS.SALAS_POR_UF);
+      const data = Array.isArray(response) ? response : [];
       
       const totalSalas = data.reduce((sum: number, item: any) => sum + (item.total_salas || 0), 0);
       const estadosComSalas = data.filter((item: any) => item.total_salas > 0).length;
@@ -89,7 +92,7 @@ export const useSalasPorUFKPIs = () => {
       
       return {
         total_salas: totalSalas,
-        total_estados_com_salas: estadosComMaisSalas,
+        total_estados_com_salas: estadoComMaisSalas,
         estado_com_mais_salas: estadoComMaisSalas?.uf || "N/A",
         maior_numero_salas: estadoComMaisSalas?.total_salas || 0,
         salas_por_uf: data,
@@ -105,7 +108,8 @@ export const useBilheteriaAnualKPIs = (ano?: number) => {
     queryKey: ["kpis", "bilheteria-anual", ano],
     queryFn: async () => {
       const params = ano ? { ano } : {};
-      const data = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL, params);
+      const response = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL, params);
+      const data = Array.isArray(response) ? response : [];
       
       const currentYear = ano || new Date().getFullYear();
       const currentYearData = data.find((item: any) => item.ano === currentYear);
@@ -141,7 +145,8 @@ export const useDesempenhoGeneroKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "desempenho-genero"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.DESEMPENHO_GENERO_BR);
+      const response = await apiClient.get(API_ENDPOINTS.DESEMPENHO_GENERO_BR);
+      const data = Array.isArray(response) ? response : [];
       
       // Encontrar o gênero com melhor desempenho
       const melhorGenero = data.reduce((max: any, item: any) => 
@@ -170,7 +175,8 @@ export const useProducaoEstatisticasKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "producao-estatisticas"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.PRODUCAO_ESTATISTICAS);
+      const response = await apiClient.get(API_ENDPOINTS.PRODUCAO_ESTATISTICAS);
+      const data = response && typeof response === 'object' ? response as any : {};
       
       return {
         total_obras: data.total_obras || 0,
@@ -189,10 +195,13 @@ export const useCoproducoesKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "coproducoes"],
     queryFn: async () => {
-      const [coproducoes, estatisticas] = await Promise.all([
+      const [coproducoesResponse, estatisticasResponse] = await Promise.all([
         apiClient.get(API_ENDPOINTS.PRODUCAO_COPRODUCOES),
         apiClient.get(API_ENDPOINTS.PRODUCAO_COPRODUCOES_ESTATISTICAS)
       ]);
+      
+      const coproducoes = Array.isArray(coproducoesResponse) ? coproducoesResponse : [];
+      const estatisticas = estatisticasResponse || {};
       
       // Processar países parceiros
       const paisesParceiros = new Map();
@@ -207,12 +216,12 @@ export const useCoproducoesKPIs = () => {
         .sort(([,a], [,b]) => (b as number) - (a as number))[0];
       
       return {
-        taxa_coproducao: estatisticas.taxa_coproducao || 0,
+        taxa_coproducao: (estatisticas as any)?.taxa_coproducao || 0,
         total_coproducoes: coproducoes.length,
         top_pais_parceiro: topPaisParceiro?.[0] || "N/A",
         coproducoes_top_pais: topPaisParceiro?.[1] || 0,
         paises_parceiros: Array.from(paisesParceiros.entries()),
-        desempenho_comparativo: estatisticas.desempenho_comparativo || {},
+        desempenho_comparativo: (estatisticas as any)?.desempenho_comparativo || {},
         data_original: { coproducoes, estatisticas }
       };
     },
@@ -225,7 +234,8 @@ export const useLancamentosEstatisticasKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "lancamentos-estatisticas"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_ESTATISTICAS);
+      const response = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_ESTATISTICAS);
+      const data = response && typeof response === 'object' ? response as any : {};
       
       return {
         total_lancamentos_ano: data.total_lancamentos_ano || 0,
@@ -245,7 +255,8 @@ export const useLancamentosRecentesKPIs = (limit = 10) => {
   return useQuery({
     queryKey: ["kpis", "lancamentos-recentes", limit],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_RECENTES, { limit });
+      const response = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_RECENTES, { limit });
+      const data = Array.isArray(response) ? response : [];
       
       const nacionaisRecentes = data.filter((item: any) => item.origem === 'Nacional').length;
       const estrangeirosRecentes = data.filter((item: any) => item.origem === 'Estrangeiro').length;
@@ -268,10 +279,13 @@ export const useExibicaoKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "exibicao"],
     queryFn: async () => {
-      const [complexos, salas] = await Promise.all([
+      const [complexosResponse, salasResponse] = await Promise.all([
         apiClient.get(API_ENDPOINTS.DATA_COMPLEXOS),
         apiClient.get(API_ENDPOINTS.SALAS_POR_UF)
       ]);
+      
+      const complexos = Array.isArray(complexosResponse) ? complexosResponse : [];
+      const salas = Array.isArray(salasResponse) ? salasResponse : [];
       
       const totalComplexos = complexos.length;
       const totalSalas = salas.reduce((sum: number, item: any) => sum + (item.total_salas || 0), 0);
@@ -306,7 +320,8 @@ export const useDistribuidorasKPIs = () => {
   return useQuery({
     queryKey: ["kpis", "distribuidoras"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.DATA_DISTRIBUIDORAS);
+      const response = await apiClient.get(API_ENDPOINTS.DATA_DISTRIBUIDORAS);
+      const data = Array.isArray(response) ? response : [];
       
       const nacionais = data.filter((item: any) => item.tipo === 'Nacional').length;
       const estrangeiras = data.filter((item: any) => item.tipo === 'Estrangeiro').length;
