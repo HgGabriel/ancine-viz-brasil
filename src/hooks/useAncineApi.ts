@@ -38,7 +38,8 @@ export const useMarketShare = () => {
   return useQuery({
     queryKey: ["marketShare"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.MARKET_SHARE);
+      const response = await apiClient.get(API_ENDPOINTS.MARKET_SHARE);
+      const data = Array.isArray(response) ? response : [];
       
       // Processar os dados para o formato esperado pelos componentes
       const brasileiro = data.find((item: any) => item.tipo_filme === "Brasileiro");
@@ -65,7 +66,8 @@ export const useDistribuidorasRanking = (limit = 10) => {
   return useQuery({
     queryKey: ["distribuidorasRanking", limit],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.RANKING_DISTRIBUIDORAS, { limit });
+      const response = await apiClient.get(API_ENDPOINTS.RANKING_DISTRIBUIDORAS, { limit });
+      const data = Array.isArray(response) ? response : [];
       
       // Agrupar por distribuidora e somar os valores
       const distribuidorasMap = new Map();
@@ -105,7 +107,8 @@ export const useSalasPorUF = () => {
   return useQuery({
     queryKey: ["salasPorUF"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.SALAS_POR_UF);
+      const response = await apiClient.get(API_ENDPOINTS.SALAS_POR_UF);
+      const data = Array.isArray(response) ? response : [];
       
       // Processar os dados para o formato esperado
       return {
@@ -146,7 +149,8 @@ export const useDistributionKPIs = () => {
     queryKey: ["distributionKPIs"],
     queryFn: async () => {
       const currentYear = new Date().getFullYear();
-      const data = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL, { ano: currentYear });
+      const response = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL, { ano: currentYear });
+      const data = Array.isArray(response) ? response : [];
       
       // Process data to get current year totals
       const currentYearData = data.find((item: any) => item.ano === currentYear) || {};
@@ -165,7 +169,8 @@ export const useDistributionTrends = () => {
   return useQuery({
     queryKey: ["distributionTrends"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL);
+      const response = await apiClient.get(API_ENDPOINTS.BILHETERIA_ANUAL);
+      const data = Array.isArray(response) ? response : [];
       
       // Sort by year and prepare data for charts
       const sortedData = data.sort((a: any, b: any) => a.ano - b.ano);
@@ -189,7 +194,8 @@ export const useGenrePerformance = () => {
   return useQuery({
     queryKey: ["genrePerformance"],
     queryFn: async () => {
-      const data = await apiClient.get(API_ENDPOINTS.DESEMPENHO_GENERO_BR);
+      const response = await apiClient.get(API_ENDPOINTS.DESEMPENHO_GENERO_BR);
+      const data = Array.isArray(response) ? response : [];
       
       // Process data to calculate average performance by genre
       return data.map((item: any) => ({
@@ -221,15 +227,18 @@ export const useReleaseSearch = (filters: Record<string, any> = {}, page = 1) =>
         }
       });
       
-      const data = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_PESQUISA, params);
+      const response = await apiClient.get(API_ENDPOINTS.LANCAMENTOS_PESQUISA, params);
       
       // Process the response to match expected format
+      const data = response && typeof response === 'object' ? response : {};
+      const dataArray = Array.isArray(data) ? data : (data as any)?.data || [];
+      
       return {
-        releases: data.data || data || [],
-        pagination: data.pagination || {
+        releases: dataArray,
+        pagination: (data as any)?.pagination || {
           current_page: page,
-          total_pages: Math.ceil((data.length || 0) / 20),
-          total_items: data.length || 0,
+          total_pages: Math.ceil(dataArray.length / 20),
+          total_items: dataArray.length,
           page_size: 20
         }
       };
@@ -256,14 +265,17 @@ export const useProducaoObras = (filters: Record<string, any> = {}, page = 1) =>
         }
       });
       
-      const data = await apiClient.get(API_ENDPOINTS.PRODUCAO_OBRAS, params);
+      const response = await apiClient.get(API_ENDPOINTS.PRODUCAO_OBRAS, params);
+      
+      const data = response && typeof response === 'object' ? response : {};
+      const dataArray = Array.isArray(data) ? data : (data as any)?.data || [];
       
       return {
-        obras: data.data || data || [],
-        pagination: data.pagination || {
+        obras: dataArray,
+        pagination: (data as any)?.pagination || {
           current_page: page,
-          total_pages: Math.ceil((data.length || 0) / 20),
-          total_items: data.length || 0,
+          total_pages: Math.ceil(dataArray.length / 20),
+          total_items: dataArray.length,
           page_size: 20
         }
       };
@@ -323,14 +335,17 @@ export const usePesquisaSalas = (filters: Record<string, any> = {}, page = 1) =>
         }
       });
       
-      const data = await apiClient.get(API_ENDPOINTS.PESQUISA_SALAS, params);
+      const response = await apiClient.get(API_ENDPOINTS.PESQUISA_SALAS, params);
+      
+      const data = response && typeof response === 'object' ? response : {};
+      const dataArray = Array.isArray(data) ? data : (data as any)?.data || [];
       
       return {
-        salas: data.data || data || [],
-        pagination: data.pagination || {
+        salas: dataArray,
+        pagination: (data as any)?.pagination || {
           current_page: page,
-          total_pages: Math.ceil((data.length || 0) / 20),
-          total_items: data.length || 0,
+          total_pages: Math.ceil(dataArray.length / 20),
+          total_items: dataArray.length,
           page_size: 20
         }
       };
