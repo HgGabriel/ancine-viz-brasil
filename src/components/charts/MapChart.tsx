@@ -22,7 +22,7 @@ const brazilianRegions = {
   },
   'Nordeste': {
     states: ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
-    color: '#f59e0b'
+    color: '#0b3ef5ff'
   },
   'Centro-Oeste': {
     states: ['DF', 'GO', 'MT', 'MS'],
