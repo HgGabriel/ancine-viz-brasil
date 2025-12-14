@@ -10,7 +10,7 @@ export const useMarketShareKPIs = () => {
     queryFn: async () => {
       const response: any = await apiClient.get(API_ENDPOINTS.MARKET_SHARE);
 
-      console.log(response);
+
 
       // API retorna: { data: [...], metadata: {...}, success: true }
       const data = Array.isArray(response?.data) ? response.data : [];
@@ -23,11 +23,7 @@ export const useMarketShareKPIs = () => {
         (item: any) => item.tipo_filme === "Estrangeiro"
       );
 
-      console.log("Response: " + JSON.stringify(response));
-      console.log("Response data: " + JSON.stringify(response?.data));
-      console.log("Market Share Data: " + JSON.stringify(data));
-      console.log("Brasileiro: " + JSON.stringify(brasileiro));
-      console.log("Estrangeiro: " + JSON.stringify(estrangeiro));
+
 
       if (!brasileiro || !estrangeiro) {
         throw new Error("Dados de market share incompletos");
@@ -113,18 +109,9 @@ export const useSalasPorUFKPIs = () => {
       // API retorna: { data: [...], metadata: {...}, success: true }
       const data: SalasPorUfItem[] = Array.isArray(response?.data) ? response.data : [];
 
-      console.log("Dados de salas por UF:", data);
-      console.log(
-        "Total de salas:",
-        data.reduce(
-          (sum: number, item: SalasPorUfItem) => sum + (item.total_salas || 0),
-          0
-        )
-      );
-      console.log(
-        "Estados com salas:",
-        data.filter((item: SalasPorUfItem) => item.total_salas > 0).length
-      );
+      console.log("API Response for Salas por UF:", response);
+
+
 
       const totalSalas = data.reduce(
         (sum: number, item: SalasPorUfItem) => sum + (item.total_salas || 0),
@@ -440,34 +427,14 @@ export const useDistribuidorasKPIs = () => {
 // Hook combinado para Overview Dashboard
 export const useOverviewKPIs = () => {
   const marketShare = useMarketShareKPIs();
-  const distribuidoras = useDistribuidorasRankingKPIs(1); // Top 1 para overview
+  const distribuidoras = useDistribuidorasRankingKPIs(1);
   const salas = useSalasPorUFKPIs();
   const bilheteria = useBilheteriaAnualKPIs();
-
-  console.log("Overview KPIs - Market Share:", marketShare.data);
-  console.log("Overview KPIs - Distribuidoras:", distribuidoras.data);
-  console.log("Overview KPIs - Salas:", salas.data);
-  console.log("Overview KPIs - Bilheteria:", bilheteria.data);
 
   return {
     marketShare,
     distribuidoras,
     salas,
     bilheteria,
-    isLoading:
-      marketShare.isLoading ||
-      distribuidoras.isLoading ||
-      salas.isLoading ||
-      bilheteria.isLoading,
-    isError:
-      marketShare.isError ||
-      distribuidoras.isError ||
-      salas.isError ||
-      bilheteria.isError,
-    error:
-      marketShare.error ||
-      distribuidoras.error ||
-      salas.error ||
-      bilheteria.error,
   };
 };

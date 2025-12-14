@@ -1,8 +1,31 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
-import { apiClient, ApiResponse, ApiError } from '@/lib/apiClient';
-import { useDebounce, useDebouncedCallback } from './useDebounce';
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
+import { apiClient, ApiError } from "@/lib/apiClient";
+import { useDebounce, useDebouncedCallback } from "./useDebounce";
+
+// Backend response interface for paginated data
+interface BackendPaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  metadata?: {
+    pagination?: {
+      total: number;
+      page: number;
+      per_page: number;
+      total_pages: number;
+      has_next: boolean;
+      has_prev: boolean;
+    };
+  };
+  pagination?: {
+    // Fallback for direct pagination structure
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+    page_size: number;
+  };
+}
 
 export interface PaginationInfo {
   currentPage: number;
@@ -15,7 +38,7 @@ export interface UsePaginatedDataOptions {
   pageSize?: number;
   initialFilters?: Record<string, any>;
   initialSortBy?: string;
-  initialSortDirection?: 'asc' | 'desc';
+  initialSortDirection?: "asc" | "desc";
   enabled?: boolean;
   staleTime?: number;
   syncWithUrl?: boolean;
@@ -29,25 +52,25 @@ export interface UsePaginatedDataResult<T> {
   error: ApiError | null;
   refetch: () => void;
   isRefetching: boolean;
-  
+
   // State management functions
   setPage: (page: number) => void;
   setFilters: (filters: Record<string, any>) => void;
   setFiltersDebounced: (filters: Record<string, any>) => void;
-  setSort: (column: string, direction: 'asc' | 'desc') => void;
+  setSort: (column: string, direction: "asc" | "desc") => void;
   resetFilters: () => void;
-  
+
   // Current state
   currentPage: number;
   filters: Record<string, any>;
   sortBy: string | null;
-  sortDirection: 'asc' | 'desc';
+  sortDirection: "asc" | "desc";
 }
 
 /**
  * Hook for fetching paginated data with filtering and sorting
  * Supports URL synchronization for shareable filtered states
- * 
+ *
  * @param endpoint - API endpoint to fetch from
  * @param options - Configuration options
  * @returns Paginated data result with state management functions
@@ -60,18 +83,18 @@ export function usePaginatedData<T = any>(
     pageSize = 20,
     initialFilters = {},
     initialSortBy,
-    initialSortDirection = 'asc',
+    initialSortDirection = "asc",
     enabled = true,
     staleTime = 5 * 60 * 1000,
     syncWithUrl = true,
   } = options;
 
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Initialize state from URL params if syncWithUrl is enabled
   const getInitialPage = () => {
     if (syncWithUrl) {
-      const pageParam = searchParams.get('page');
+      const pageParam = searchParams.get("page");
       return pageParam ? parseInt(pageParam, 10) : 1;
     }
     return 1;
@@ -81,7 +104,7 @@ export function usePaginatedData<T = any>(
     if (syncWithUrl) {
       const urlFilters: Record<string, any> = {};
       searchParams.forEach((value, key) => {
-        if (key !== 'page' && key !== 'sortBy' && key !== 'sortDirection') {
+        if (key !== "page" && key !== "sortBy" && key !== "sortDirection") {
           urlFilters[key] = value;
         }
       });
@@ -92,8 +115,10 @@ export function usePaginatedData<T = any>(
 
   const getInitialSort = () => {
     if (syncWithUrl) {
-      const sortBy = searchParams.get('sortBy') || initialSortBy;
-      const sortDirection = (searchParams.get('sortDirection') as 'asc' | 'desc') || initialSortDirection;
+      const sortBy = searchParams.get("sortBy") || initialSortBy;
+      const sortDirection =
+        (searchParams.get("sortDirection") as "asc" | "desc") ||
+        initialSortDirection;
       return { sortBy, sortDirection };
     }
     return { sortBy: initialSortBy, sortDirection: initialSortDirection };
@@ -101,9 +126,14 @@ export function usePaginatedData<T = any>(
 
   // State management
   const [currentPage, setCurrentPage] = useState(getInitialPage);
-  const [filters, setFiltersState] = useState<Record<string, any>>(getInitialFilters);
-  const [sortBy, setSortBy] = useState<string | null>(getInitialSort().sortBy || null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(getInitialSort().sortDirection);
+  const [filters, setFiltersState] =
+    useState<Record<string, any>>(getInitialFilters);
+  const [sortBy, setSortBy] = useState<string | null>(
+    getInitialSort().sortBy || null
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    getInitialSort().sortDirection
+  );
 
   // Debounce filters to avoid excessive API calls
   const debouncedFilters = useDebounce(filters, 500); // Increased to 500ms for better performance
@@ -113,33 +143,40 @@ export function usePaginatedData<T = any>(
     if (!syncWithUrl) return;
 
     const newParams = new URLSearchParams();
-    
+
     // Add page if not 1
     if (currentPage > 1) {
-      newParams.set('page', currentPage.toString());
+      newParams.set("page", currentPage.toString());
     }
-    
+
     // Add filters
     Object.entries(debouncedFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== "") {
         newParams.set(key, String(value));
       }
     });
-    
+
     // Add sort parameters
     if (sortBy) {
-      newParams.set('sortBy', sortBy);
-      newParams.set('sortDirection', sortDirection);
+      newParams.set("sortBy", sortBy);
+      newParams.set("sortDirection", sortDirection);
     }
 
     setSearchParams(newParams, { replace: true });
-  }, [currentPage, debouncedFilters, sortBy, sortDirection, syncWithUrl, setSearchParams]);
+  }, [
+    currentPage,
+    debouncedFilters,
+    sortBy,
+    sortDirection,
+    syncWithUrl,
+    setSearchParams,
+  ]);
 
-  // Build query parameters
+  // Build query parameters - using per_page to match backend API
   const queryParams = useMemo(() => {
     const params: Record<string, any> = {
       page: currentPage,
-      limit: pageSize,
+      per_page: pageSize,
       ...debouncedFilters,
     };
 
@@ -152,16 +189,16 @@ export function usePaginatedData<T = any>(
   }, [currentPage, pageSize, debouncedFilters, sortBy, sortDirection]);
 
   // Fetch data using React Query
-  const query = useQuery<ApiResponse<T>, ApiError>({
-    queryKey: ['paginated', endpoint, queryParams],
+  const query = useQuery<BackendPaginatedResponse<T>, ApiError>({
+    queryKey: ["paginated", endpoint, queryParams],
     queryFn: async () => {
-      return apiClient.getPaginated<T>(endpoint, queryParams);
+      return apiClient.get<BackendPaginatedResponse<T>>(endpoint, queryParams);
     },
     enabled,
     staleTime,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    keepPreviousData: true, // Keep previous data while loading new page
+    placeholderData: keepPreviousData, // Keep previous data while loading new page (React Query v5)
     // Enhanced caching and performance settings
     gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     refetchOnWindowFocus: false, // Disable for paginated data to avoid disruption
@@ -171,16 +208,33 @@ export function usePaginatedData<T = any>(
     refetchIntervalInBackground: false,
   });
 
-  // Extract pagination info from response
+  // Extract pagination info from response - handles both metadata.pagination and direct pagination
   const paginationInfo: PaginationInfo = useMemo(() => {
-    const pagination = query.data?.pagination;
+    // Check for metadata.pagination structure (new backend format)
+    const metadataPagination = query.data?.metadata?.pagination;
+    if (metadataPagination) {
+      return {
+        currentPage: metadataPagination.page || currentPage,
+        totalPages: metadataPagination.total_pages || 1,
+        totalItems: metadataPagination.total || 0,
+        pageSize: metadataPagination.per_page || pageSize,
+      };
+    }
+
+    // Fallback to direct pagination structure
+    const directPagination = query.data?.pagination;
     return {
-      currentPage: pagination?.current_page || currentPage,
-      totalPages: pagination?.total_pages || 1,
-      totalItems: pagination?.total_items || 0,
-      pageSize: pagination?.page_size || pageSize,
+      currentPage: directPagination?.current_page || currentPage,
+      totalPages: directPagination?.total_pages || 1,
+      totalItems: directPagination?.total_items || 0,
+      pageSize: directPagination?.page_size || pageSize,
     };
-  }, [query.data?.pagination, currentPage, pageSize]);
+  }, [
+    query.data?.metadata?.pagination,
+    query.data?.pagination,
+    currentPage,
+    pageSize,
+  ]);
 
   // State management functions
   const setPage = useCallback((page: number) => {
@@ -195,7 +249,7 @@ export function usePaginatedData<T = any>(
   // Debounced filter setter for better performance with rapid filter changes
   const setFiltersDebounced = useDebouncedCallback(setFilters, 300);
 
-  const setSort = useCallback((column: string, direction: 'asc' | 'desc') => {
+  const setSort = useCallback((column: string, direction: "asc" | "desc") => {
     setSortBy(column);
     setSortDirection(direction);
     setCurrentPage(1); // Reset to first page when sort changes
@@ -216,14 +270,14 @@ export function usePaginatedData<T = any>(
     error: query.error,
     refetch: query.refetch,
     isRefetching: query.isRefetching,
-    
+
     // State management
     setPage,
     setFilters,
     setFiltersDebounced,
     setSort,
     resetFilters,
-    
+
     // Current state
     currentPage,
     filters,
