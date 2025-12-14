@@ -2,7 +2,13 @@ import { useState } from "react";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { BarChart } from "@/components/charts/BarChart";
 import { PaginatedTable } from "@/components/ui/paginated-table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useDistribuidorasRanking } from "@/hooks/useAncineApi";
 import { usePaginatedData } from "@/hooks/usePaginatedData";
@@ -11,17 +17,25 @@ import { Column } from "@/types/ui";
 
 interface DistribuidoraData {
   distribuidora: string;
-  publico_total: number;
-  renda_total: number;
+  total_publico: number;
+  total_renda: number;
   total_filmes: number;
+  rank?: number;
+  tipo?: string;
+  market_share?: number;
 }
 
 export const DistributorRankingTab = () => {
-  const [selectedMetric, setSelectedMetric] = useState<'publico' | 'renda'>('publico');
-  const [selectedFilter, setSelectedFilter] = useState<'geral' | 'nacional' | 'estrangeiro'>('geral');
+  const [selectedMetric, setSelectedMetric] = useState<"publico" | "renda">(
+    "publico"
+  );
+  const [selectedFilter, setSelectedFilter] = useState<
+    "geral" | "nacional" | "estrangeiro"
+  >("geral");
 
   // Fetch top 10 distributors for chart
-  const { data: topDistributors, isLoading: isLoadingTop } = useDistribuidorasRanking(10);
+  const { data: topDistributors, isLoading: isLoadingTop } =
+    useDistribuidorasRanking(10);
 
   // Fetch paginated data for table
   const {
@@ -30,73 +44,86 @@ export const DistributorRankingTab = () => {
     isLoading: isLoadingTable,
     setPage,
     setFilters,
-    filters
-  } = usePaginatedData<DistribuidoraData>('/estatisticas/ranking_distribuidoras', {
-    pageSize: 20,
-    initialFilters: { tipo: selectedFilter !== 'geral' ? selectedFilter : undefined }
-  });
+    filters,
+  } = usePaginatedData<DistribuidoraData>(
+    "/estatisticas/ranking_distribuidoras",
+    {
+      pageSize: 10,
+      initialFilters: {
+        tipo: selectedFilter !== "geral" ? selectedFilter : undefined,
+      },
+    }
+  );
 
-  // Prepare chart data
-  const chartData = topDistributors?.ranking?.map((item: DistribuidoraData) => ({
-    name: item.distribuidora.length > 20
-      ? item.distribuidora.substring(0, 20) + '...'
-      : item.distribuidora,
-    fullName: item.distribuidora,
-    publico: item.publico_total,
-    renda: item.renda_total / 1000000, // Convert to millions for better readability
-    filmes: item.total_filmes
-  })) || [];
+  // Prepare chart data - note: hook returns total_publico, total_renda, total_filmes
+  const chartData =
+    topDistributors?.ranking?.map((item: any) => ({
+      name:
+        item.distribuidora.length > 10
+          ? item.distribuidora.substring(0, 10) + "..."
+          : item.distribuidora,
+      fullName: item.distribuidora,
+      publico: item.total_publico || 0,
+      renda: (item.total_renda || 0) / 1000000, // Convert to millions for better readability
+      filmes: item.total_filmes || 0,
+    })) || [];
 
-  // Table columns
+  // Table columns - using backend field names (total_publico, total_renda, total_filmes)
   const columns: Column<DistribuidoraData>[] = [
     {
-      id: 'position',
-      header: 'Posição',
-      accessorKey: 'distribuidora',
+      id: "position",
+      header: "Posição",
+      accessorKey: "distribuidora",
       cell: (_, row) => {
-        const index = tableData.findIndex(item => item.distribuidora === row.distribuidora);
-        return (paginationInfo.currentPage - 1) * paginationInfo.pageSize + index + 1;
-      }
+        // Use rank from backend if available, otherwise calculate from position
+        if (row.rank) return row.rank;
+        const index = tableData.findIndex(
+          (item) => item.distribuidora === row.distribuidora
+        );
+        return (
+          (paginationInfo.currentPage - 1) * paginationInfo.pageSize + index + 1
+        );
+      },
     },
     {
-      id: 'name',
-      header: 'Distribuidora',
-      accessorKey: 'distribuidora',
-      sortable: true
+      id: "name",
+      header: "Distribuidora",
+      accessorKey: "distribuidora",
+      sortable: true,
     },
     {
-      id: 'films',
-      header: 'Total de Filmes',
-      accessorKey: 'total_filmes',
+      id: "films",
+      header: "Total de Filmes",
+      accessorKey: "total_filmes",
       cell: (value) => formatNumber(value),
-      sortable: true
+      sortable: true,
     },
     {
-      id: 'public',
-      header: 'Público Total',
-      accessorKey: 'publico_total',
+      id: "public",
+      header: "Público Total",
+      accessorKey: "total_publico",
       cell: (value) => formatNumber(value),
-      sortable: true
+      sortable: true,
     },
     {
-      id: 'revenue',
-      header: 'Renda Total',
-      accessorKey: 'renda_total',
+      id: "revenue",
+      header: "Renda Total",
+      accessorKey: "total_renda",
       cell: (value) => formatCurrency(value),
-      sortable: true
-    }
+      sortable: true,
+    },
   ];
 
   // Handle filter changes
-  const handleMetricChange = (value: 'publico' | 'renda') => {
+  const handleMetricChange = (value: "publico" | "renda") => {
     setSelectedMetric(value);
   };
 
-  const handleFilterChange = (value: 'geral' | 'nacional' | 'estrangeiro') => {
+  const handleFilterChange = (value: "geral" | "nacional" | "estrangeiro") => {
     setSelectedFilter(value);
     setFilters({
       ...filters,
-      tipo: value !== 'geral' ? value : undefined
+      tipo: value !== "geral" ? value : undefined,
     });
   };
 
@@ -114,7 +141,7 @@ export const DistributorRankingTab = () => {
           </SelectContent>
         </Select>
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="filter-select">Filtro</Label>
         <Select value={selectedFilter} onValueChange={handleFilterChange}>
@@ -135,7 +162,9 @@ export const DistributorRankingTab = () => {
     <div className="space-y-6">
       {/* Top 10 Chart */}
       <ChartWrapper
-        title={`Top 10 Distribuidoras por ${selectedMetric === 'publico' ? 'Público' : 'Renda'}`}
+        title={`Top 10 Distribuidoras por ${
+          selectedMetric === "publico" ? "Público" : "Renda"
+        }`}
         isLoading={isLoadingTop}
         actions={
           <Select value={selectedMetric} onValueChange={handleMetricChange}>
@@ -156,16 +185,18 @@ export const DistributorRankingTab = () => {
           orientation="horizontal"
           isLoading={isLoadingTop}
           height={400}
-          colors={['#009c3b']}
+          colors={["#009c3b"]}
         />
       </ChartWrapper>
 
       {/* Paginated Table */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Ranking Completo de Distribuidoras</h3>
+          <h3 className="text-lg font-semibold">
+            Ranking Completo de Distribuidoras
+          </h3>
         </div>
-        
+
         <PaginatedTable
           columns={columns}
           data={tableData}
