@@ -8,12 +8,14 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ValueType,
+  NameType,
 } from 'recharts';
 
-interface LineChartProps {
-  data: Array<Record<string, any>>;
-  xAxisKey: string;
-  yAxisKeys: string[];
+interface LineChartProps<TData extends Record<string, any>> {
+  data: TData[];
+  xAxisKey: keyof TData;
+  yAxisKeys: (keyof TData)[];
   isLoading?: boolean;
   colors?: string[];
   showLegend?: boolean;
@@ -23,7 +25,7 @@ interface LineChartProps {
 
 const defaultColors = ['#009c3b', '#002776', '#ffdf00', '#8884d8', '#82ca9d', '#ffc658'];
 
-export const LineChart: React.FC<LineChartProps> = ({
+export const LineChart = <TData extends Record<string, any>>({
   data,
   xAxisKey,
   yAxisKeys,
@@ -32,7 +34,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   showLegend = true,
   height = 300,
   strokeWidth = 2,
-}) => {
+}: React.PropsWithChildren<LineChartProps<TData>>) => {
   if (isLoading || !data || data.length === 0) {
     return (
       <div 
@@ -44,14 +46,14 @@ export const LineChart: React.FC<LineChartProps> = ({
     );
   }
 
-  const formatTooltipValue = (value: any, name: string) => {
+  const formatTooltipValue = (value: ValueType, name: NameType) => {
     if (typeof value === 'number') {
       return [value.toLocaleString('pt-BR'), name];
     }
     return [value, name];
   };
 
-  const formatAxisValue = (value: any) => {
+  const formatAxisValue = (value: string | number) => {
     if (typeof value === 'number') {
       return value.toLocaleString('pt-BR');
     }
@@ -72,7 +74,7 @@ export const LineChart: React.FC<LineChartProps> = ({
         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
         
         <XAxis 
-          dataKey={xAxisKey}
+          dataKey={xAxisKey as string}
           className="text-xs"
         />
         
@@ -95,9 +97,9 @@ export const LineChart: React.FC<LineChartProps> = ({
         
         {yAxisKeys.map((key, index) => (
           <Line
-            key={key}
+            key={key as string}
             type="monotone"
-            dataKey={key}
+            dataKey={key as string}
             stroke={colors[index % colors.length]}
             strokeWidth={strokeWidth}
             dot={{ r: 4 }}

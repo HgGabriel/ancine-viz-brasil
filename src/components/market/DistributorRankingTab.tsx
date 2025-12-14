@@ -10,9 +10,9 @@ import { formatNumber, formatCurrency } from "@/lib/utils";
 import { Column } from "@/types/ui";
 
 interface DistribuidoraData {
-  distribuidora_nome: string;
-  total_publico: number;
-  total_renda: number;
+  distribuidora: string;
+  publico_total: number;
+  renda_total: number;
   total_filmes: number;
 }
 
@@ -38,12 +38,12 @@ export const DistributorRankingTab = () => {
 
   // Prepare chart data
   const chartData = topDistributors?.ranking?.map((item: DistribuidoraData) => ({
-    name: item.distribuidora_nome.length > 20 
-      ? item.distribuidora_nome.substring(0, 20) + '...' 
-      : item.distribuidora_nome,
-    fullName: item.distribuidora_nome,
-    publico: item.total_publico,
-    renda: item.total_renda / 1000000, // Convert to millions for better readability
+    name: item.distribuidora.length > 20
+      ? item.distribuidora.substring(0, 20) + '...'
+      : item.distribuidora,
+    fullName: item.distribuidora,
+    publico: item.publico_total,
+    renda: item.renda_total / 1000000, // Convert to millions for better readability
     filmes: item.total_filmes
   })) || [];
 
@@ -52,16 +52,16 @@ export const DistributorRankingTab = () => {
     {
       id: 'position',
       header: 'Posição',
-      accessorKey: 'distribuidora_nome',
+      accessorKey: 'distribuidora',
       cell: (_, row) => {
-        const index = tableData.findIndex(item => item.distribuidora_nome === row.distribuidora_nome);
+        const index = tableData.findIndex(item => item.distribuidora === row.distribuidora);
         return (paginationInfo.currentPage - 1) * paginationInfo.pageSize + index + 1;
       }
     },
     {
       id: 'name',
       header: 'Distribuidora',
-      accessorKey: 'distribuidora_nome',
+      accessorKey: 'distribuidora',
       sortable: true
     },
     {
@@ -74,14 +74,14 @@ export const DistributorRankingTab = () => {
     {
       id: 'public',
       header: 'Público Total',
-      accessorKey: 'total_publico',
+      accessorKey: 'publico_total',
       cell: (value) => formatNumber(value),
       sortable: true
     },
     {
       id: 'revenue',
       header: 'Renda Total',
-      accessorKey: 'total_renda',
+      accessorKey: 'renda_total',
       cell: (value) => formatCurrency(value),
       sortable: true
     }

@@ -31,7 +31,7 @@ export const ProductionProfileTab: React.FC = () => {
   const [yearFilter, setYearFilter] = useState<string>('');
 
   // Fetch production statistics
-  const { data: stats, isLoading: statsLoading } = useApiData<ProductionStats>('/api/v1/producao/estatisticas');
+  const { data: stats, isLoading: statsLoading } = useApiData<ProductionStats>('/producao/estatisticas');
 
   // Fetch paginated works data with filters
   const {
@@ -41,7 +41,7 @@ export const ProductionProfileTab: React.FC = () => {
     setPage,
     setFilters,
     resetFilters,
-  } = usePaginatedData<ObraData>('/api/v1/producao/obras', {
+  } = usePaginatedData<ObraData>('/producao/obras', {
     pageSize: 15,
     initialFilters: {},
   });

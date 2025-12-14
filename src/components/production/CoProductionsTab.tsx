@@ -28,7 +28,7 @@ interface CoProductionWork {
 
 export const CoProductionsTab: React.FC = () => {
   // Fetch co-production statistics
-  const { data: stats, isLoading: statsLoading } = useApiData<CoProductionStats>('/api/v1/producao/coproducoes/estatisticas');
+  const { data: stats, isLoading: statsLoading } = useApiData<CoProductionStats>('/producao/coproducoes/estatisticas');
 
   // Fetch paginated co-production works
   const {
@@ -36,7 +36,7 @@ export const CoProductionsTab: React.FC = () => {
     paginationInfo,
     isLoading: worksLoading,
     setPage,
-  } = usePaginatedData<CoProductionWork>('/api/v1/producao/coproducoes', {
+  } = usePaginatedData<CoProductionWork>('/producao/coproducoes', {
     pageSize: 15,
     initialFilters: { coproducao_internacional: true },
   });

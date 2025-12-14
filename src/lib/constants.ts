@@ -35,7 +35,6 @@ export const API_ENDPOINTS = {
   LANCAMENTOS: '/data/lancamentos',
   COMPLEXOS: '/data/complexos',
   DISTRIBUIDORAS: '/data/distribuidoras',
-  FILMAGEM_ESTRANGEIRA: '/producao/filmagem-estrangeira',
 } as const;
 
 // Brazilian color palette for theming
@@ -95,12 +94,6 @@ export const NAVIGATION_ITEMS = [
     label: 'Exibição',
     href: '/exibicao',
     icon: 'MapPin',
-  },
-  {
-    id: 'foreign-production',
-    label: 'Produção Estrangeira',
-    href: '/producao-estrangeira',
-    icon: 'Globe',
   },
 ] as const;
 

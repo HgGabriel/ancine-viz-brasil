@@ -9,7 +9,6 @@ import Market from "./pages/Market";
 import NationalProduction from "./pages/NationalProduction";
 import Distribution from "./pages/Distribution";
 import Exhibition from "./pages/Exhibition";
-import ForeignProduction from "./pages/ForeignProduction";
 import NotFound from "./pages/NotFound";
 
 const AppContent = () => {
@@ -24,7 +23,6 @@ const AppContent = () => {
         <Route path="/producao-nacional" element={<NationalProduction />} />
         <Route path="/distribuicao" element={<Distribution />} />
         <Route path="/exibicao" element={<Exhibition />} />
-        <Route path="/producao-estrangeira" element={<ForeignProduction />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </MainLayout>

@@ -1,225 +1,85 @@
+import { ChartConfig } from "@/components/ui/chart";
 import { LucideIcon } from "lucide-react";
-import { ReactNode } from "react";
 
-// Base component props
-export interface BaseComponentProps {
-  className?: string;
-  children?: ReactNode;
-}
+export type PageTitleProps = {
+  title: string;
+  subtitle?: string;
+};
 
-// Loading state interface
-export interface LoadingState {
+export interface KPIProps {
+  title: string;
+  value: string | number;
+  description: string;
+  icon?: LucideIcon;
   isLoading?: boolean;
 }
 
-// KPI Card interfaces
-export interface TrendData {
+export interface KPICardProps {
+  title: string;
   value: number;
-  isPositive: boolean;
-  label?: string;
-}
-
-export interface KpiCardProps extends BaseComponentProps, LoadingState {
-  title: string;
-  value: string | number;
+  description: string;
   icon?: LucideIcon;
-  description?: string;
-  trend?: TrendData;
-  formatValue?: (value: string | number) => string;
+  isLoading?: boolean;
 }
 
-// Table interfaces
-export interface Column<T = any> {
-  id: string;
-  header: string;
-  accessorKey: keyof T;
-  cell?: (value: any, row: T) => ReactNode;
-  sortable?: boolean;
-  filterable?: boolean;
-  width?: string;
+export interface KPICardPercentageProps extends KPICardProps {
+  value: number;
 }
 
-export interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  pageSize: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
-}
-
-export interface SortConfig {
-  column: string;
-  direction: 'asc' | 'desc';
-}
-
-export interface FilterConfig {
-  [key: string]: any;
-}
-
-export interface PaginatedTableProps<T = any> extends BaseComponentProps, LoadingState {
-  columns: Column<T>[];
-  data: T[];
-  paginationInfo: PaginationInfo;
-  onPageChange: (page: number) => void;
-  onSortChange?: (column: string, direction: 'asc' | 'desc') => void;
-  onFilterChange?: (filters: FilterConfig) => void;
-  filters?: ReactNode;
-  emptyMessage?: string;
-  showPagination?: boolean;
-}
-
-// Chart interfaces
-export interface ChartWrapperProps extends BaseComponentProps, LoadingState {
+export interface ChartCardProps {
   title: string;
-  children: ReactNode;
-  actions?: ReactNode;
-  description?: string;
+  chartData: Record<string, any>[];
+  chartConfig: ChartConfig;
+  isLoading?: boolean;
 }
 
-export interface BaseChartProps extends LoadingState {
-  data: Array<Record<string, any>>;
-  colors?: string[];
-  height?: number;
-  responsive?: boolean;
+export interface DataTableProps<TData> {
+  data: TData[];
+  columns: any[];
+  pageSize?: number;
+  onFilterChange?: (filters: Record<string, string>) => void;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  totalRows?: number;
+  currentPage?: number;
+  filterValue?: string;
+  setFilterValue?: (value: string) => void;
+  columnFilters?: any;
+  setColumnFilters?: any;
+  columnVisibility?: any;
+  setColumnVisibility?: any;
+  rowSelection?: any;
+  setRowSelection?: any;
 }
 
-export interface BarChartProps extends BaseChartProps {
-  xAxisKey: string;
-  yAxisKey: string;
-  orientation?: 'horizontal' | 'vertical';
-  showGrid?: boolean;
-  showTooltip?: boolean;
+export interface SalasPorUfItem {
+  uf: string;
+  total_salas: number;
+  nome_uf: string;
 }
 
-export interface LineChartProps extends BaseChartProps {
-  xAxisKey: string;
-  yAxisKeys: string[];
-  showGrid?: boolean;
-  showTooltip?: boolean;
-  showLegend?: boolean;
+export interface SalasData {
+  total_salas: number;
+  total_estados_com_salas: number;
+  estado_com_mais_salas: string;
+  maior_numero_salas: number;
+  salas_por_uf: SalasPorUfItem[];
+  data_original: SalasPorUfItem[];
+  metadata: any;
 }
 
-export interface PieChartProps extends BaseChartProps {
-  dataKey: string;
-  nameKey: string;
-  showLegend?: boolean;
-  showTooltip?: boolean;
-  innerRadius?: number;
-  outerRadius?: number;
+export interface HistoricoCompletoItem {
+  ano: string;
+  publico_total: number;
+  renda_total: number;
 }
 
-export interface MapChartProps extends BaseChartProps {
-  data: Array<{ uf: string; value: number; name: string }>;
-  colorScale?: string[];
-  showTooltip?: boolean;
+export interface BilheteriaData {
+  ano_atual: string;
+  publico_total: number;
+  renda_total: number;
+  publico_variacao_anual: number;
+  renda_variacao_anual: number;
+  historico_completo: HistoricoCompletoItem[];
+  metadata: any;
 }
-
-// Navigation interfaces
-export interface NavigationItem {
-  id: string;
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  badge?: string | number;
-  disabled?: boolean;
-}
-
-export interface SidebarProps extends BaseComponentProps {
-  items: NavigationItem[];
-  isCollapsed?: boolean;
-  onToggle?: () => void;
-  currentPath?: string;
-}
-
-// Layout interfaces
-export interface MainLayoutProps extends BaseComponentProps {
-  children: ReactNode;
-  sidebar?: ReactNode;
-  header?: ReactNode;
-}
-
-export interface HeaderProps extends BaseComponentProps {
-  title?: string;
-  showThemeToggle?: boolean;
-  breadcrumbs?: Array<{ label: string; href?: string }>;
-  actions?: ReactNode;
-}
-
-// Form interfaces
-export interface FormFieldProps extends BaseComponentProps {
-  label: string;
-  error?: string;
-  required?: boolean;
-  description?: string;
-}
-
-export interface SelectOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
-
-export interface FilterSelectProps extends BaseComponentProps {
-  options: SelectOption[];
-  value?: string;
-  onValueChange: (value: string) => void;
-  placeholder?: string;
-  label?: string;
-}
-
-// API Response interfaces
-export interface ApiResponse<T = any> {
-  data: T[];
-  pagination?: {
-    current_page: number;
-    total_pages: number;
-    total_items: number;
-    page_size: number;
-    last_id?: string;
-  };
-  success?: boolean;
-  message?: string;
-}
-
-export interface ApiError {
-  message: string;
-  code?: string | number;
-  details?: any;
-}
-
-// Theme interfaces
-export interface ThemeConfig {
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    foreground: string;
-  };
-  mode: 'light' | 'dark';
-}
-
-// Skeleton interfaces
-export interface SkeletonProps extends BaseComponentProps {
-  width?: string | number;
-  height?: string | number;
-  variant?: 'text' | 'circular' | 'rectangular';
-}
-
-export interface LoadingSkeletonProps {
-  rows?: number;
-  columns?: number;
-  showHeader?: boolean;
-  height?: string;
-}
-
-// Utility types
-export type ComponentSize = 'sm' | 'md' | 'lg' | 'xl';
-export type ComponentVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost';
-export type ComponentState = 'default' | 'loading' | 'error' | 'success';
-
-// Event handler types
-export type ClickHandler = (event: React.MouseEvent) => void;
-export type ChangeHandler<T = string> = (value: T) => void;
-export type SubmitHandler = (event: React.FormEvent) => void;

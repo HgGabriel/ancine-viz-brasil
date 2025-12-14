@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@/components/ui/tooltip';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface MapChartData {
   uf: string;
@@ -14,138 +14,157 @@ interface MapChartProps {
   height?: number;
 }
 
-const defaultColorScale = ['#e8f5e8', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20'];
-
-// Simplified Brazilian states with basic positioning for a grid-like layout
-const brazilianStates = [
-  { uf: 'AC', name: 'Acre', x: 10, y: 60 },
-  { uf: 'AL', name: 'Alagoas', x: 80, y: 40 },
-  { uf: 'AP', name: 'Amapá', x: 60, y: 10 },
-  { uf: 'AM', name: 'Amazonas', x: 20, y: 30 },
-  { uf: 'BA', name: 'Bahia', x: 70, y: 50 },
-  { uf: 'CE', name: 'Ceará', x: 80, y: 20 },
-  { uf: 'DF', name: 'Distrito Federal', x: 60, y: 60 },
-  { uf: 'ES', name: 'Espírito Santo', x: 80, y: 70 },
-  { uf: 'GO', name: 'Goiás', x: 60, y: 65 },
-  { uf: 'MA', name: 'Maranhão', x: 70, y: 20 },
-  { uf: 'MT', name: 'Mato Grosso', x: 40, y: 60 },
-  { uf: 'MS', name: 'Mato Grosso do Sul', x: 40, y: 75 },
-  { uf: 'MG', name: 'Minas Gerais', x: 70, y: 70 },
-  { uf: 'PA', name: 'Pará', x: 50, y: 20 },
-  { uf: 'PB', name: 'Paraíba', x: 85, y: 30 },
-  { uf: 'PR', name: 'Paraná', x: 60, y: 85 },
-  { uf: 'PE', name: 'Pernambuco', x: 80, y: 35 },
-  { uf: 'PI', name: 'Piauí', x: 75, y: 25 },
-  { uf: 'RJ', name: 'Rio de Janeiro', x: 75, y: 75 },
-  { uf: 'RN', name: 'Rio Grande do Norte', x: 85, y: 25 },
-  { uf: 'RS', name: 'Rio Grande do Sul', x: 55, y: 95 },
-  { uf: 'RO', name: 'Rondônia', x: 25, y: 55 },
-  { uf: 'RR', name: 'Roraima', x: 40, y: 5 },
-  { uf: 'SC', name: 'Santa Catarina', x: 60, y: 90 },
-  { uf: 'SP', name: 'São Paulo', x: 65, y: 80 },
-  { uf: 'SE', name: 'Sergipe', x: 80, y: 45 },
-  { uf: 'TO', name: 'Tocantins', x: 65, y: 40 },
-];
+// Brazilian regions with their states and colors
+const brazilianRegions = {
+  'Norte': {
+    states: ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO'],
+    color: '#10b981'
+  },
+  'Nordeste': {
+    states: ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+    color: '#f59e0b'
+  },
+  'Centro-Oeste': {
+    states: ['DF', 'GO', 'MT', 'MS'],
+    color: '#ef4444'
+  },
+  'Sudeste': {
+    states: ['ES', 'MG', 'RJ', 'SP'],
+    color: '#3b82f6'
+  },
+  'Sul': {
+    states: ['PR', 'RS', 'SC'],
+    color: '#8b5cf6'
+  }
+};
 
 export const MapChart: React.FC<MapChartProps> = ({
   data,
   isLoading = false,
-  colorScale = defaultColorScale,
   height = 400,
 }) => {
   if (isLoading || !data || data.length === 0) {
     return (
-      <div 
+      <div
         className="flex items-center justify-center bg-muted/20 rounded-md"
         style={{ height }}
       >
-        <span className="text-muted-foreground">Carregando dados...</span>
+        <span className="text-muted-foreground">Carregando mapa do Brasil...</span>
       </div>
     );
   }
 
-  // Create a map for quick lookup of data by UF
-  const dataMap = new Map(data.map(item => [item.uf, item]));
-  
-  // Calculate min and max values for color scaling
-  const values = data.map(item => item.value);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const valueRange = maxValue - minValue;
-
-  const getColorForValue = (value: number): string => {
-    if (valueRange === 0) return colorScale[0];
-    
-    const normalizedValue = (value - minValue) / valueRange;
-    const colorIndex = Math.floor(normalizedValue * (colorScale.length - 1));
-    return colorScale[Math.min(colorIndex, colorScale.length - 1)];
+  // Get region for each state
+  const getRegionForState = (uf: string): { region: string; color: string } => {
+    for (const [regionName, regionData] of Object.entries(brazilianRegions)) {
+      if (regionData.states.includes(uf)) {
+        return { region: regionName, color: regionData.color };
+      }
+    }
+    return { region: 'Outros', color: '#6b7280' };
   };
+
+  // Prepare data with regions and colors
+  const chartData = data
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 15) // Show top 15 states
+    .map(item => {
+      const { region, color } = getRegionForState(item.uf);
+      return {
+        ...item,
+        region,
+        color,
+        displayName: `${item.uf} (${item.name || item.uf})`
+      };
+    });
+
+  // Calculate regional totals for the summary
+  const regionalTotals = Object.entries(brazilianRegions).map(([regionName, regionData]) => {
+    const regionStates = data.filter(item => regionData.states.includes(item.uf));
+    const total = regionStates.reduce((sum, item) => sum + item.value, 0);
+    return {
+      region: regionName,
+      total,
+      color: regionData.color,
+      stateCount: regionStates.length
+    };
+  }).sort((a, b) => b.total - a.total);
 
   const formatValue = (value: number): string => {
     return value.toLocaleString('pt-BR');
   };
 
   return (
-    <div className="relative w-full" style={{ height }}>
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 100 100"
-        className="border border-border rounded-md"
-      >
-        {brazilianStates.map((state) => {
-          const stateData = dataMap.get(state.uf);
-          const hasData = !!stateData;
-          const fillColor = hasData ? getColorForValue(stateData.value) : '#f5f5f5';
-          
-          return (
-            <g key={state.uf}>
-              <circle
-                cx={state.x}
-                cy={state.y}
-                r="2.5"
-                fill={fillColor}
-                stroke="#666"
-                strokeWidth="0.2"
-                className="cursor-pointer hover:stroke-2 transition-all duration-200"
-              />
-              <text
-                x={state.x}
-                y={state.y + 0.5}
-                textAnchor="middle"
-                fontSize="1.5"
-                fill="#333"
-                className="pointer-events-none font-semibold"
-              >
-                {state.uf}
-              </text>
-              
-              {/* Tooltip-like hover effect */}
-              <title>
-                {state.name}
-                {hasData && ` - ${formatValue(stateData.value)}`}
-              </title>
-            </g>
-          );
-        })}
-      </svg>
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-background/90 border border-border rounded-md p-2">
-        <div className="text-xs font-semibold mb-1">Valores</div>
-        <div className="flex items-center space-x-1">
-          <span className="text-xs">{formatValue(minValue)}</span>
-          <div className="flex">
-            {colorScale.map((color, index) => (
-              <div
-                key={index}
-                className="w-3 h-3"
-                style={{ backgroundColor: color }}
-              />
-            ))}
+    <div className="space-y-4">
+      {/* Regional Summary */}
+      <div className="grid grid-cols-5 gap-2 mb-4">
+        {regionalTotals.map(({ region, total, color, stateCount }) => (
+          <div
+            key={region}
+            className="p-2 rounded-lg border border-border bg-card"
+            style={{ borderLeftColor: color, borderLeftWidth: '3px' }}
+          >
+            <div className="text-xs font-semibold text-muted-foreground">{region}</div>
+            <div className="text-sm font-bold">{formatValue(total)}</div>
+            <div className="text-xs text-muted-foreground">{stateCount} estados</div>
           </div>
-          <span className="text-xs">{formatValue(maxValue)}</span>
-        </div>
+        ))}
+      </div>
+
+      {/* Main Chart */}
+      <div style={{ height: height - 100 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+            <XAxis
+              dataKey="uf"
+              tick={{ fontSize: 11 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              tickFormatter={(value) => formatValue(value)}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "var(--radius)",
+              }}
+              formatter={(value: number, name, props) => [
+                `${formatValue(value)} salas`,
+                `${props.payload.name || props.payload.uf} - ${props.payload.region}`
+              ]}
+              labelFormatter={(label) => `Estado: ${label}`}
+            />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 justify-center text-xs">
+        {Object.entries(brazilianRegions).map(([regionName, regionData]) => (
+          <div key={regionName} className="flex items-center gap-1">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: regionData.color }}
+            />
+            <span>{regionName}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

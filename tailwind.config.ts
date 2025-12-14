@@ -21,7 +21,7 @@ export default {
         brasil: {
           green: "#009c3b",
           blue: "#002776", 
-          yellow: "#ffdf00",
+          yellow: "#ddff6fff",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

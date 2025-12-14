@@ -2,7 +2,7 @@ import React from 'react';
 import { Building2, MapPin, Users } from 'lucide-react';
 import { KpiCard } from '@/components/ui/kpi-card';
 import { ChartWrapper } from '@/components/charts/ChartWrapper';
-import { MapChart } from '@/components/charts/MapChart';
+import { InteractiveBrazilMap } from '@/components/charts/InteractiveBrazilMap';
 import { BarChart } from '@/components/charts/BarChart';
 import { ExhibitionDataTable } from '@/components/exhibition/ExhibitionDataTable';
 import { useExhibitionData } from '@/hooks/useExhibitionApi';
@@ -80,11 +80,10 @@ const Exhibition = () => {
           title="Mapa Interativo - Salas por Estado"
           isLoading={exhibitionLoading}
         >
-          <MapChart
+          <BrazilSVGMap
             data={mapData}
             isLoading={exhibitionLoading}
-            height={400}
-            colorScale={['#e8f5e8', '#c8e6c9', '#a5d6a7', '#81c784', '#66bb6a', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20']}
+            height={450}
           />
         </ChartWrapper>
 

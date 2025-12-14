@@ -2,26 +2,57 @@ import { Film, TrendingUp, MapPin, Users, AlertCircle } from "lucide-react";
 import { KpiCardPercentage, KpiCardNumber } from "@/components/ui/kpi-card";
 import { ChartWrapper } from "@/components/charts/ChartWrapper";
 import { LineChart } from "@/components/charts/LineChart";
-import { MapChart } from "@/components/charts/MapChart";
-import { useOverviewKPIs } from "@/hooks/useKPIs";
+import { InteractiveBrazilMap } from "@/components/charts/InteractiveBrazilMap";
+import { useOverviewKPIs, SalasData, BilheteriaData } from "@/hooks/useKPIs";
 import { useMemo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { formatNumber, formatCompactNumber } from "@/lib/formatters";
+import { formatCompactNumber } from "@/lib/formatters";
 
-
+interface MapChartDataItem {
+  uf: string;
+  value: number;
+  name: string;
+}
 
 const Overview = () => {
   // Fetch KPI data using the new hooks
-  const { marketShare, distribuidoras, salas, bilheteria, isLoading, isError, error } = useOverviewKPIs();
+  const { marketShare, distribuidoras, salas: salasResponse, bilheteria: bilheteriaResponse, isLoading, isError, error } = useOverviewKPIs();
+
+  const salas = salasResponse as { data: SalasData | undefined; isLoading: boolean; isError: boolean; error: Error | null };
+  const bilheteria = bilheteriaResponse as { data: BilheteriaData | undefined; isLoading: boolean; isError: boolean; error: Error | null };
+
+
+  // Prepare chart data
+  const mapChartData: MapChartDataItem[] = useMemo(() => {
+    if (!salas.data?.salas_por_uf) return [];
+    return salas.data.salas_por_uf.map((item) => ({
+      uf: item.uf,
+      value: item.total_salas,
+      name: item.nome_uf || item.uf
+    }));
+  }, [salas.data]);
+
+  interface OverviewKpiData {
+    marketSharePublic: number;
+    marketShareRevenue: number;
+    totalSalas: number;
+    topDistribuidora: {
+      distribuidora: string;
+      publico: number;
+    };
+    precoMedioIngresso: number;
+    publicoTotal: number;
+    rendaTotal: number;
+  }
 
   // Calculate KPI values from the new data structure
-  const kpiData = useMemo(() => {
+  const kpiData: OverviewKpiData = useMemo(() => {
     return {
       marketSharePublic: marketShare.data?.market_share_nacional_publico || 0,
       marketShareRevenue: marketShare.data?.market_share_nacional_renda || 0,
       totalSalas: salas.data?.total_salas || 0,
       topDistribuidora: {
-        nome: distribuidoras.data?.top_distribuidor || 'N/A',
+        distribuidora: distribuidoras.data?.top_distribuidor || 'N/A',
         publico: distribuidoras.data?.top_distribuidor_publico || 0
       },
       precoMedioIngresso: bilheteria.data?.preco_medio_ingresso || 0,
@@ -30,32 +61,22 @@ const Overview = () => {
     };
   }, [marketShare.data, distribuidoras.data, salas.data, bilheteria.data]);
 
-  // Prepare chart data
-  const mapChartData = useMemo(() => {
-    if (!salas.data?.salas_por_uf) return [];
-    return salas.data.salas_por_uf.map((item: any) => ({
-      uf: item.uf,
-      value: item.total_salas,
-      name: item.nome_uf || item.uf
-    }));
-  }, [salas.data]);
-
   // Prepare market share evolution data from bilheteria data
-  const chartEvolutionData = useMemo(() => {
+  const chartEvolutionData: HistoricoCompletoItem[] = useMemo(() => {
     if (!bilheteria.data?.historico_completo) {
       // Fallback mock data
       return [
-        { ano: '2019', nacional: 18.2, estrangeiro: 81.8 },
-        { ano: '2020', nacional: 22.1, estrangeiro: 77.9 },
-        { ano: '2021', nacional: 25.3, estrangeiro: 74.7 },
-        { ano: '2022', nacional: 28.7, estrangeiro: 71.3 },
-        { ano: '2023', nacional: 31.2, estrangeiro: 68.8 },
+        { ano: 2019, publico_total: 0, renda_total: 0 },
+        { ano: 2020, publico_total: 0, renda_total: 0 },
+        { ano: 2021, publico_total: 0, renda_total: 0 },
+        { ano: 2022, publico_total: 0, renda_total: 0 },
+        { ano: 2023, publico_total: 0, renda_total: 0 },
       ];
     }
     
     // Process real data if available
-    return bilheteria.data.historico_completo.slice(-5).map((item: any) => ({
-      ano: item.ano.toString(),
+    return bilheteria.data.historico_completo.slice(-5).map((item) => ({
+      ano: item.ano,
       publico_total: item.publico_total || 0,
       renda_total: item.renda_total || 0
     }));
@@ -116,7 +137,7 @@ const Overview = () => {
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-bold tracking-tight">
-              {isLoading ? "..." : kpiData.topDistribuidora.nome}
+              {isLoading ? "..." : kpiData.topDistribuidora.distribuidora}
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {isLoading 
@@ -134,10 +155,10 @@ const Overview = () => {
           title="Evolução da Bilheteria Anual"
           isLoading={isLoading}
         >
-          <LineChart
+          <LineChart<HistoricoCompletoItem>
             data={chartEvolutionData}
             xAxisKey="ano"
-            yAxisKeys={["publico_total", "renda_total"]}
+            yAxisKeys={["publico_total", "renda_total"] as (keyof HistoricoCompletoItem)[]}
             colors={["#009c3b", "#002776"]}
             height={300}
             showLegend={true}
@@ -146,12 +167,12 @@ const Overview = () => {
         </ChartWrapper>
         
         <ChartWrapper
-          title="Distribuição de Salas por Estado"
+          title="Mapa do Brasil - Salas de Cinema"
           isLoading={isLoading}
         >
-          <MapChart
+          <InteractiveBrazilMap
             data={mapChartData}
-            height={300}
+            height={450}
             isLoading={isLoading}
           />
         </ChartWrapper>

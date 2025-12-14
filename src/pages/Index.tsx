@@ -11,6 +11,10 @@ const Index = () => {
   const { data: salasData, isLoading: salasLoading } = useSalasPorUF();
   const { data: distribuidorasData, isLoading: distribuidorasLoading } = useDistribuidorasRanking(1);
 
+  console.log("Market Share Data:", marketShareData);
+  console.log("Salas Data:", salasData);
+  console.log("Distribuidoras Data:", distribuidorasData);
+
   const totalSalas = salasData?.salas_por_uf?.reduce(
     (acc: number, item: any) => acc + item.total_salas,
     0
@@ -51,9 +55,9 @@ const Index = () => {
           />
           <KPICard
             title="Top Distribuidora"
-            value={topDistribuidora?.total_publico?.toLocaleString() || "N/A"}
+            value={topDistribuidora?.publico_total?.toLocaleString() || "N/A"}
             icon={<Users className="h-5 w-5" />}
-            description={topDistribuidora?.distribuidora_nome?.substring(0, 25) || "Carregando..."}
+            description={topDistribuidora?.distribuidora?.substring(0, 25) || "Carregando..."}
             isLoading={distribuidorasLoading}
             variant="primary"
           />
