@@ -1,14 +1,20 @@
-import React from 'react';
-import { KpiCard } from '@/components/ui/kpi-card';
-import { ChartWrapper } from '@/components/charts/ChartWrapper';
-import { BarChart } from '@/components/charts/BarChart';
-import { PaginatedTable } from '@/components/ui/paginated-table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Film, Calendar, RotateCcw } from 'lucide-react';
-import { useApiData } from '@/hooks/useApiData';
-import { usePaginatedData } from '@/hooks/usePaginatedData';
-import { useState } from 'react';
+import React from "react";
+import { KpiCard } from "@/components/ui/kpi-card";
+import { ChartWrapper } from "@/components/charts/ChartWrapper";
+import { BarChart } from "@/components/charts/BarChart";
+import { PaginatedTable } from "@/components/ui/paginated-table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Film, Calendar, RotateCcw } from "lucide-react";
+import { useApiData } from "@/hooks/useApiData";
+import { usePaginatedData } from "@/hooks/usePaginatedData";
+import { useState } from "react";
 
 interface ObraData {
   cpb: string;
@@ -27,11 +33,13 @@ interface ProductionStats {
 }
 
 export const ProductionProfileTab: React.FC = () => {
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [yearFilter, setYearFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [yearFilter, setYearFilter] = useState<string>("");
 
   // Fetch production statistics
-  const { data: stats, isLoading: statsLoading } = useApiData<ProductionStats>('/producao/estatisticas');
+  const { data: stats, isLoading: statsLoading } = useApiData<ProductionStats>(
+    "/producao/estatisticas"
+  );
 
   // Fetch paginated works data with filters
   const {
@@ -41,66 +49,75 @@ export const ProductionProfileTab: React.FC = () => {
     setPage,
     setFilters,
     resetFilters,
-  } = usePaginatedData<ObraData>('/producao/obras', {
+  } = usePaginatedData<ObraData>("/producao/obras", {
     pageSize: 15,
     initialFilters: {},
   });
 
-  // Handle filter changes
+  // Handle filter changes - using backend parameter names (work_type, year)
   const handleTypeFilterChange = (value: string) => {
     setTypeFilter(value);
     const newFilters: Record<string, any> = {};
-    if (value && value !== 'all') newFilters.tipo_obra = value;
-    if (yearFilter && yearFilter !== 'all') newFilters.ano_producao = yearFilter;
+    if (value && value !== "all") newFilters.work_type = value;
+    if (yearFilter && yearFilter !== "all")
+      newFilters.year = parseInt(yearFilter);
     setFilters(newFilters);
   };
 
   const handleYearFilterChange = (value: string) => {
     setYearFilter(value);
     const newFilters: Record<string, any> = {};
-    if (typeFilter && typeFilter !== 'all') newFilters.tipo_obra = typeFilter;
-    if (value && value !== 'all') newFilters.ano_producao = value;
+    if (typeFilter && typeFilter !== "all") newFilters.work_type = typeFilter;
+    if (value && value !== "all") newFilters.year = parseInt(value);
     setFilters(newFilters);
   };
 
   const handleResetFilters = () => {
-    setTypeFilter('');
-    setYearFilter('');
+    setTypeFilter("");
+    setYearFilter("");
     resetFilters();
   };
 
   // Table columns configuration
   const columns = [
     {
-      id: 'titulo',
-      header: 'Título',
-      accessorKey: 'titulo' as keyof ObraData,
+      id: "titulo",
+      header: "Título",
+      accessorKey: "titulo" as keyof ObraData,
       sortable: true,
     },
     {
-      id: 'tipo_obra',
-      header: 'Tipo',
-      accessorKey: 'tipo_obra' as keyof ObraData,
+      id: "tipo_obra",
+      header: "Tipo",
+      accessorKey: "tipo_obra" as keyof ObraData,
       sortable: true,
     },
     {
-      id: 'ano_producao',
-      header: 'Ano',
-      accessorKey: 'ano_producao' as keyof ObraData,
+      id: "ano_producao",
+      header: "Ano",
+      accessorKey: "ano_producao" as keyof ObraData,
       sortable: true,
     },
     {
-      id: 'duracao_minutos',
-      header: 'Duração (min)',
-      accessorKey: 'duracao_minutos' as keyof ObraData,
+      id: "duracao_minutos",
+      header: "Duração",
+      accessorKey: "duracao_minutos" as keyof ObraData,
       sortable: true,
-      cell: (value: number) => value ? `${value} min` : 'N/A',
+      cell: (value: number) => {
+        if (!value) return "N/A";
+        if (value >= 60) {
+          const hours = Math.floor(value / 60);
+          const minutes = value % 60;
+          return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
+        }
+        return `${value} min`;
+      },
     },
     {
-      id: 'coproducao_internacional',
-      header: 'Coprodução',
-      accessorKey: 'coproducao_internacional' as keyof ObraData,
-      cell: (value: boolean) => value ? 'Sim' : 'Não',
+      id: "coproducao_internacional",
+      header: "Coprodução",
+      accessorKey: "coproducao_internacional" as keyof ObraData,
+      cell: (value: boolean) => (value ? "Sim" : "Não"),
     },
   ];
 
@@ -109,7 +126,7 @@ export const ProductionProfileTab: React.FC = () => {
   const yearOptions = Array.from({ length: 20 }, (_, i) => currentYear - i);
 
   // Get unique work types from stats for filter
-  const workTypes = stats?.obras_por_tipo?.map(item => item.tipo) || [];
+  const workTypes = stats?.obras_por_tipo?.map((item) => item.tipo) || [];
 
   const filters = (
     <div className="flex items-center gap-4">
@@ -172,15 +189,13 @@ export const ProductionProfileTab: React.FC = () => {
           icon={Calendar}
           description="Ano com maior número de obras produzidas"
           isLoading={statsLoading}
+          formatValue={(val: string | number) => val.toString()}
         />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartWrapper
-          title="Obras por Tipo"
-          isLoading={statsLoading}
-        >
+        <ChartWrapper title="Obras por Tipo" isLoading={statsLoading}>
           <BarChart
             data={stats?.obras_por_tipo || []}
             xAxisKey="tipo"
@@ -190,10 +205,7 @@ export const ProductionProfileTab: React.FC = () => {
           />
         </ChartWrapper>
 
-        <ChartWrapper
-          title="Obras por Ano"
-          isLoading={statsLoading}
-        >
+        <ChartWrapper title="Obras por Ano" isLoading={statsLoading}>
           <BarChart
             data={stats?.obras_por_ano?.slice(-10) || []} // Show last 10 years
             xAxisKey="ano"
