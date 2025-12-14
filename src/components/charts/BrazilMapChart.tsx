@@ -24,7 +24,7 @@ const brazilianRegions = {
 
 const regionColors = {
   'Norte': '#4ade80',
-  'Nordeste': '#f59e0b',
+  'Nordeste': '#0b1ff5ff',
   'Centro-Oeste': '#ef4444',
   'Sudeste': '#3b82f6',
   'Sul': '#8b5cf6'
