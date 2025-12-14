@@ -72,6 +72,7 @@ export interface HistoricoCompletoItem {
   ano: string;
   publico_total: number;
   renda_total: number;
+  total_filmes?: number;
 }
 
 export interface BilheteriaData {

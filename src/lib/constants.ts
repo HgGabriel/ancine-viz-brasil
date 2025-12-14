@@ -84,12 +84,6 @@ export const NAVIGATION_ITEMS = [
     icon: 'Film',
   },
   {
-    id: 'distribution',
-    label: 'Distribuição',
-    href: '/distribuicao',
-    icon: 'Share2',
-  },
-  {
     id: 'exhibition',
     label: 'Exibição',
     href: '/exibicao',
